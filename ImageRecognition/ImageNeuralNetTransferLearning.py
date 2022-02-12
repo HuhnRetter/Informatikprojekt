@@ -27,7 +27,7 @@ batch_size = 3
 learning_rate = 0.01
 
 # 1 == True ; 0 == False
-load_model_from_file = 0
+load_model_from_file = 1
 
 # Automatic Filename for loading and saving
 learning_rate_string = str(learning_rate).replace('.', '')
@@ -36,7 +36,7 @@ EndFilename = "ImagenetNeuralNet.pth"
 FILE = f"ImageTransferLearning{MiddleFilename}{EndFilename}"
 
 # Manuel Filename for loading
-# FILE = "LetterNeuralNetNE100BS100LR0001LetterNeuralNet.pth"
+FILE = "LetterNeuralNetNE3BS3LR001ImagenetNeuralNetACC94.pth"
 
 # Writer for Tensorboard
 writer = SummaryWriter(f'runs/{MiddleFilename}')
@@ -69,7 +69,10 @@ def createConfusionMatrix(loader, model):
     y_true = [] # save ground truth
     model.to(device)
     # iterate over data
-    for inputs, labels in loader:
+    n_total_steps = len(loader)
+    n_total_steps_quarter = n_total_steps * .1
+
+    for i, (inputs, labels) in enumerate(loader):
         output = model(inputs.to(device))  # Feed Network
 
         output = (torch.max(torch.exp(output), 1)[1]).data.cpu().numpy()
@@ -78,6 +81,9 @@ def createConfusionMatrix(loader, model):
 
         labels = labels.data.cpu().numpy()
         y_true.extend(labels)  # save ground truth
+
+        print(f'Step [{i + 1}/{n_total_steps}]')
+
 
     # Build confusion matrix
     cf_matrix = confusion_matrix(y_true, y_pred)
@@ -235,6 +241,7 @@ def testingPhase(model, test_loader):
     :param model: current model of the class NeuralNet
     :param test_loader: dataloader with Test dataset
     """
+    #device = "cpu"
     model.to(device)
     with torch.no_grad():
         print("\n\nStarting with Testing!")
@@ -244,11 +251,10 @@ def testingPhase(model, test_loader):
         for inputs, labels in test_loader:
             outputs = model(inputs.to(device))
             _, predicted = torch.max(outputs.data, 1)
-            n_correct_array, n_wrong_array = countPredictedImages(labels.to(device), predicted.to(device),
-                                                                  n_correct_array, n_wrong_array)
+            n_correct_array, n_wrong_array = countPredictedImages(labels.to(device), predicted.to(device), n_correct_array, n_wrong_array)
 
         # Save confusion matrix to Tensorboard
-        writer.add_figure(f"Confusion matrix testing from: {FILE}", createConfusionMatrix(test_loader, model))
+        writer.add_figure(f" testing from: {FILE}", createConfusionMatrix(test_loader, model))
         writer.close()
 
         counter = 0

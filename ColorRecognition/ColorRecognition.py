@@ -13,10 +13,11 @@ all_classes = ["WHITE", "RED", "GREEN", "OTHER"]
 
 # NeuralNetSettings
 ############################
-# FILE = "ColorNeuralNetHS25NE10BS10HLSACC9075.pth"
 FILECOLORTEST = "color_test2.jpg"
 
-FILE = "ColorNeuralNetHS25NE1500HLSACC8775.pth"
+# FILE = "ColorNeuralNetHS25NE10BS10HLSACC9075.pth"
+# FILE = "ColorNeuralNetHS25NE1500HLSACC8775.pth"
+FILE = "ColorNeuralNetHS25NE150BS4LR0001HLS.pth"
 input_size = 2
 hidden_size = 25
 num_classes = 4

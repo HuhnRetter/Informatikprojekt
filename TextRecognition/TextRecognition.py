@@ -33,6 +33,40 @@ def setup():
     print(type(img))
     return img
 
+def setupImage(img):
+    """does multiple modification to the original img
+
+    converts the img to a grayscale image
+    blurs the img to get better bounding box results
+    inverts the img, so it can be used by the function measure.find_contours
+
+    :param img: image as ndarray
+    :return: returns the modified image as ndarray
+    """
+    # remove alpha channel
+    try:
+        gray_img = color.rgba2rgb(img)
+        gray_img = color.rgb2gray(gray_img)
+    except Exception as e:
+        gray_img = color.rgb2gray(img)
+
+    # showimage(gray_img)
+    blur = gray_img
+    # showimage(blur)
+    # invert
+    th3 = skimage.util.invert(blur)
+    # showimage(th3)
+    return th3
+
+def setupModel():
+    """loads the model from the given path
+
+    :return: returns the loaded model of type LetterNeuralNet.ConvNet
+    """
+    model = LetterNeuralNet.ConvNet()
+    model.load_state_dict(torch.load(FILENEURALNET))
+    model.eval()
+    return model
 
 def showimage(img):
     """shows given image until ESC is pressed
@@ -68,32 +102,17 @@ def getBoundingBox(cnt):
     ymax = np.max(cnt[:, 1])
     return x, xmax, y, ymax
 
-
-def setupImage(img):
-    """does multiple modification to the original img
-
-    converts the img to a grayscale image
-    blurs the img to get better bounding box results
-    inverts the img, so it can be used by the function measure.find_contours
+def getCrop(img, x, y, xmax, ymax):
+    """gets a cropped image for the given coordinates
 
     :param img: image as ndarray
-    :return: returns the modified image as ndarray
+    :param x: min value of x-coordinate of type int
+    :param y: min value of y-coordinate of type int
+    :param xmax: max value of x-coordinate of type int
+    :param ymax: max value of y-coordinate of type int
+    :return: returns the cropped image as ndarray
     """
-    # remove alpha channel
-    try:
-        gray_img = color.rgba2rgb(img)
-        gray_img = color.rgb2gray(gray_img)
-    except Exception as e:
-        gray_img = color.rgb2gray(img)
-
-    # showimage(gray_img)
-    blur = gray_img
-    # showimage(blur)
-    # invert
-    th3 = skimage.util.invert(blur)
-    # showimage(th3)
-    return th3
-
+    return img[x:xmax, y:ymax]
 
 def drawBondingBox(img):
     """draws a bonding Box for each letter
@@ -124,30 +143,6 @@ def drawBondingBox(img):
                 draw.set_color(img, draw.rectangle_perimeter((x, y), (xmax, ymax)), (0, 100, 0))
             cv2.putText(img, letter, (y, x - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 100, 0), 1)
     return img
-
-
-def setupModel():
-    """loads the model from the given path
-
-    :return: returns the loaded model of type LetterNeuralNet.ConvNet
-    """
-    model = LetterNeuralNet.ConvNet()
-    model.load_state_dict(torch.load(FILENEURALNET))
-    model.eval()
-    return model
-
-
-def getCrop(img, x, y, xmax, ymax):
-    """gets a cropped image for the given coordinates
-
-    :param img: image as ndarray
-    :param x: min value of x-coordinate of type int
-    :param y: min value of y-coordinate of type int
-    :param xmax: max value of x-coordinate of type int
-    :param ymax: max value of y-coordinate of type int
-    :return: returns the cropped image as ndarray
-    """
-    return img[x:xmax, y:ymax]
 
 
 def useLetterRecognition(crop_img, model):

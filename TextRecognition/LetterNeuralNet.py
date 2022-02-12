@@ -32,7 +32,7 @@ batch_size = 26
 learning_rate = 0.001
 
 # 1 == True ; 0 == False
-load_model_from_file = 0
+load_model_from_file = 1
 
 #Automatic Filename for loading and saving
 learning_rate_string = str(learning_rate).replace('.', '')
@@ -42,7 +42,7 @@ FILE = f"LetterNeuralNet{MiddleFilename}{EndFilename}"
 
 
 #Manuel Filename for loading
-#FILE = "LetterNeuralNetNE100BS100LR0001LetterNeuralNet.pth"
+FILE = "LetterNeuralNetNE10BS26LR0001LetterNeuralNet.pth"
 
 #Writer for Tensorboard
 writer = SummaryWriter(f'runs/{MiddleFilename}')
@@ -234,21 +234,22 @@ def testingPhase(model, test_loader):
     :param model: current model of the class NeuralNet
     :param test_loader: dataloader with Test dataset
     """
+    device = "cpu"
     with torch.no_grad():
         print("\n\nStarting with Testing!")
         n_correct_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         n_wrong_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
+        model.to(device)
         for inputs, labels in test_loader:
             outputs = model(inputs.to(device))
             labels = convertFloatTensorToLongTensor(labels)
             # labels transforms because labels start with 1
             labels = torch.add(labels, -1)
-            labels.to(device)
             # max returns (value ,index)
             # predicted = torch.argmax(outputs.data)
             _, predicted = torch.max(outputs.data, 1)
-            n_correct_array, n_wrong_array = countPredictedLetters(labels, predicted, n_correct_array, n_wrong_array)
+            n_correct_array, n_wrong_array = countPredictedLetters(labels.to(device), predicted.to(device), n_correct_array, n_wrong_array)
 
         # Save confusion matrix to Tensorboard
         writer.add_figure(f"Confusion matrix testing from: {FILE}", createConfusionMatrix(test_loader, model))
