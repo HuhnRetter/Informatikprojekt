@@ -9,8 +9,10 @@ from torchvision.datasets import ImageFolder
 import ImageNeuralNetTransferLearning
 
 # Parameters
-TESTFOLDER = './testImages'
-FILENEURALNET = "LetterNeuralNetNE3BS3LR001ImagenetNeuralNetACC94.pth"
+TESTFOLDER = './TestImages'
+MODELFOLDER = './Models/'
+MODELFILE = "ImageNeuralNetNE3BS3LR001ACC94.pth"
+FILENEURALNET = MODELFOLDER + MODELFILE
 all_classes = ["dog", "flower", "other"]
 
 #batch_size must be same as images
