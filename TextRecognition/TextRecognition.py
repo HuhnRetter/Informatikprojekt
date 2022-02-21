@@ -1,3 +1,5 @@
+import sys
+
 import cv2
 import numpy as np
 import skimage.color
@@ -7,7 +9,9 @@ from skimage import draw
 from skimage import io
 from skimage import measure
 from skimage.transform import resize
+from dataclasses import dataclass
 
+import operator
 import LetterNeuralNet
 
 # Parameters
@@ -17,12 +21,39 @@ all_classes = ["A", "B", "C", "D", "E", "F",
                "S", "T", "U", "V", "W", "X",
                "Y", "Z"]
 
-FILETEXTTEST = "./testimages/Blacktext/Test.png"
-FILENEURALNET = "LetterNeuralNetNE5BS26LR0001LetterNeuralNetACC92.pth"
+all_possible_words =["Start","Ziel"]
+
+FILETEXTTEST = "./TestImages/Test7.png"
+MODELFOLDER = "./Models/"
+MODELPATH = "LetterNeuralNetNE5BS26LR0001ACC92.pth"
+FILENEURALNET = f"{MODELFOLDER}{MODELPATH}"
 # following parameters need to be customized to the letter size
 area_size_param = 500
 padding = 10
+word_min_accuracy = 0.5
 
+
+@dataclass
+class BoundingBox:
+    """For keeping all the information to the corresponding bounding box."""
+    letter: str
+    x: int
+    y: int
+    xmax: int
+    ymax: int
+
+    # def __init__(self, letter: str, x: int, y: int, xmax: int, ymax: int ):
+    #     self.letter = letter
+    #     self.x = x
+    #     self.y = y
+    #     self.xmax = xmax
+    #     self.ymax = ymax
+
+    def getYsize(self):
+        return self.ymax-self.y
+
+    def getXsize(self):
+        return self.xmax-self.x
 
 def setup():
     """reads an image from a given Path
@@ -30,8 +61,8 @@ def setup():
     :return: returns img as ndarray
     """
     img = io.imread(FILETEXTTEST)
-    print(type(img))
     return img
+
 
 def setupImage(img):
     """does multiple modification to the original img
@@ -58,6 +89,7 @@ def setupImage(img):
     # showimage(th3)
     return th3
 
+
 def setupModel():
     """loads the model from the given path
 
@@ -67,6 +99,7 @@ def setupModel():
     model.load_state_dict(torch.load(FILENEURALNET))
     model.eval()
     return model
+
 
 def showimage(img):
     """shows given image until ESC is pressed
@@ -102,6 +135,7 @@ def getBoundingBox(cnt):
     ymax = np.max(cnt[:, 1])
     return x, xmax, y, ymax
 
+
 def getCrop(img, x, y, xmax, ymax):
     """gets a cropped image for the given coordinates
 
@@ -114,12 +148,15 @@ def getCrop(img, x, y, xmax, ymax):
     """
     return img[x:xmax, y:ymax]
 
-def drawBondingBox(img):
-    """draws a bonding Box for each letter
+
+def drawBoundingBox(img):
+    """draws a bounding Box for each letter
 
     :param img: image as ndarray
     :return: returns the img with drawn bonding boxes
     """
+    all_boundingboxes = list()
+
     model = setupModel()
     th3 = setupImage(img)
     contours = measure.find_contours(th3)
@@ -137,12 +174,15 @@ def drawBondingBox(img):
             xmax = int(xmax)
             ymax = int(ymax)
             letter = getLetter(th3, x, y, xmax, ymax, model)
+            # save parameters of the bounding box with corresponding letter
+            all_boundingboxes.append(BoundingBox(letter, x, y, xmax, ymax))
+
             try:
                 draw.set_color(img, draw.rectangle_perimeter((x, y), (xmax, ymax)), (0, 100, 0, 1))
             except Exception as e:
                 draw.set_color(img, draw.rectangle_perimeter((x, y), (xmax, ymax)), (0, 100, 0))
             cv2.putText(img, letter, (y, x - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 100, 0), 1)
-    return img
+    return img, all_boundingboxes
 
 
 def useLetterRecognition(crop_img, model):
@@ -168,6 +208,149 @@ def useLetterRecognition(crop_img, model):
     predicted = torch.argmax(outputs)
     return all_classes[predicted]
 
+def differenceForBoundingbox(prev, current, axis, diff_param):
+    if axis == "y":
+        return abs(prev.ymax - current.y) > (prev.getYsize() * diff_param)
+    else:
+        return abs(prev.xmax - current.xmax) > (prev.getXsize() * diff_param)
+
+
+def sortListOfBoundingboxBy(diff_param, key_sort_param, all_boundingboxes, axis):
+    #print(f"before all_boundingboxes: {all_boundingboxes}")
+
+    all_boundingboxes.sort(key=key_sort_param)
+    #print(f"after all_boundingboxes: {all_boundingboxes}")
+
+    wordlist = list()
+    wordlist.append(all_boundingboxes[0])
+    # separate words with , on given axis
+    for b in range(1, len(all_boundingboxes)):
+        if differenceForBoundingbox(all_boundingboxes[b-1], all_boundingboxes[b], axis, diff_param) and all_boundingboxes[b].letter != ",":
+            wordlist.append(BoundingBox(",", -1, -1, -1, -1))
+            wordlist.append(all_boundingboxes[b])
+        else:
+            wordlist.append(all_boundingboxes[b])
+    #print(f"wordlist: {wordlist}")
+    return wordlist
+
+def splitList(all_boundingboxes):
+    # Create an empty list
+    list_of_lists = []
+
+    #splittedList = list(list)
+    counter = 0
+    list_of_lists.append([])
+    for boundingbox in all_boundingboxes:
+        if(boundingbox.letter == ","):
+            counter+=1
+            list_of_lists.append([])
+        else:
+            list_of_lists[counter].append(boundingbox)
+
+    return list_of_lists
+
+def transformBoundingboxList(sorted_boundingboxes_by_words):
+
+    wordBoundingboxlist = list()
+
+    for word in sorted_boundingboxes_by_words:
+        wordString = ""
+        x = sys.maxsize
+        y = sys.maxsize
+        xmax = 0
+        ymax = 0
+        for boundingbox in word[0]:
+            wordString = wordString + boundingbox.letter
+            if(boundingbox.x < x):
+                x = boundingbox.x
+            if (boundingbox.y < y):
+                y = boundingbox.y
+            if (boundingbox.xmax > xmax):
+                xmax = boundingbox.xmax
+            if (boundingbox.ymax > ymax):
+                ymax = boundingbox.ymax
+
+        wordBoundingboxlist.append(BoundingBox(wordString,x,y,xmax,ymax))
+
+    return wordBoundingboxlist
+
+def guessWord(word: str):
+
+    accuracy_to_words = list()
+
+    for i,w in enumerate(all_possible_words):
+        accuracy_to_words.append(0)
+        #not same length = cant be the word
+        if(len(word) != len(w)):
+            continue
+
+        same_letter_counter = 0
+        for letterindex,notUsed in enumerate(word):
+            if(word[letterindex] == w[letterindex].upper()):
+                same_letter_counter+=1
+        accuracy_to_words [i] = same_letter_counter/len(word)
+
+    #choose a word from the given accuracy and return the highest possibility
+    highest_index = 0
+    for i,notUsed in enumerate(accuracy_to_words):
+        if accuracy_to_words[i] > accuracy_to_words[highest_index]:
+            highest_index = i
+
+    if(accuracy_to_words[highest_index] >= word_min_accuracy):
+        return all_possible_words[highest_index]
+
+    else:
+        return "other"
+
+
+def getWords(all_boundingboxes):
+    #sorts array for words and returns the sorted array with words
+
+    wordlistX = sortListOfBoundingboxBy(0.1, operator.attrgetter('x'), all_boundingboxes, "x")
+
+    #split list by , for input
+    splittedList = splitList(wordlistX)
+
+
+    # Create an empty list
+    wordlistY = []
+
+    counter = 0
+    for word in splittedList:
+        returnwordlist = (sortListOfBoundingboxBy(1, operator.attrgetter('ymax'), word, "y"))
+
+        splittedReturnwordlist = splitList(returnwordlist)
+        #print(f"splittedReturnwordlist: {splittedReturnwordlist}")
+        #to remove list stacking
+        for boundingbox in splittedReturnwordlist:
+            wordlistY.append([])
+            wordlistY[counter].append(boundingbox)
+            #print(f"wordlistY: {wordlistY}")
+            counter+=1
+
+    #transform each boundboxlist (word)
+    transformedlist = transformBoundingboxList(wordlistY)
+
+    # return the sorted words as an a boundbox list
+    return transformedlist
+
+
+
+
+def drawBoundingBoxForWord(img, all_boundingboxes):
+    #draws bounding box around the words
+    words = getWords(all_boundingboxes)
+
+    for word in words:
+        guessed_word = guessWord(word.letter)
+        print(word)
+        try:
+            draw.set_color(img, draw.rectangle_perimeter((word.x, word.y), (word.xmax, word.ymax)), (0, 100, 0, 1))
+        except Exception as e:
+            draw.set_color(img, draw.rectangle_perimeter((word.x, word.y), (word.xmax, word.ymax)), (0, 100, 0))
+        cv2.putText(img, guessed_word, (word.y, word.x - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 100, 0), 1)
+    return img
+
 
 def getLetter(img, x, y, xmax, ymax, model):
     """gets a letter from an image and a given interval of a bounding box
@@ -186,5 +369,8 @@ def getLetter(img, x, y, xmax, ymax, model):
 
 if __name__ == "__main__":
     img = setup()
-    img = drawBondingBox(img)
-    showimage(img)
+    copy_img = np.copy(img)
+    b_img, all_boundingboxes = drawBoundingBox(img)
+    showimage(b_img)
+    w_img = drawBoundingBoxForWord(copy_img, all_boundingboxes)
+    showimage(w_img)
