@@ -21,7 +21,7 @@ all_classes = ["A", "B", "C", "D", "E", "F",
                "S", "T", "U", "V", "W", "X",
                "Y", "Z"]
 
-all_possible_words =["Start","Ziel"]
+all_possible_words = ["Start", "Ziel"]
 
 FILETEXTTEST = "./TestImages/Test7.png"
 MODELFOLDER = "./Models/"
@@ -42,18 +42,12 @@ class BoundingBox:
     xmax: int
     ymax: int
 
-    # def __init__(self, letter: str, x: int, y: int, xmax: int, ymax: int ):
-    #     self.letter = letter
-    #     self.x = x
-    #     self.y = y
-    #     self.xmax = xmax
-    #     self.ymax = ymax
-
     def getYsize(self):
-        return self.ymax-self.y
+        return self.ymax - self.y
 
     def getXsize(self):
-        return self.xmax-self.x
+        return self.xmax - self.x
+
 
 def setup():
     """reads an image from a given Path
@@ -208,7 +202,20 @@ def useLetterRecognition(crop_img, model):
     predicted = torch.argmax(outputs)
     return all_classes[predicted]
 
+
 def differenceForBoundingbox(prev, current, axis, diff_param):
+    """compares distance between two points
+
+    Args:
+        prev: previous letter as a boundingbox data class object
+        current: current letter as a boundingbox data class object
+        axis: describes on which axis the two boundingbox data class objects are compared (x or y)
+        diff_param: parameter for setting the allowed interval (if axis == x --> checking same row, if axis == y --> checking if letters belong to the same word)
+
+    Returns:
+        returns a boolean value for checking if the letters are on the same/similar row (axis == x) or if the letters belong to the same word (axis == y)
+
+    """
     if axis == "y":
         return abs(prev.ymax - current.y) > (prev.getYsize() * diff_param)
     else:
@@ -216,41 +223,66 @@ def differenceForBoundingbox(prev, current, axis, diff_param):
 
 
 def sortListOfBoundingboxBy(diff_param, key_sort_param, all_boundingboxes, axis):
-    #print(f"before all_boundingboxes: {all_boundingboxes}")
+    """sorts the List of BoundingBox by the given parameters
 
+    Args:
+        diff_param: parameter for setting the allowed interval (if axis == x --> checking same row, if axis == y --> checking if letters belong to the same word)
+        key_sort_param: parameter by which the list is being sorted
+        all_boundingboxes: list with all bounding box data class objects
+        axis: describes on which axis the two boundingbox data class objects are compared (x or y)
+
+    Returns:
+        returns sorted List with bounding box data class objects
+
+    """
     all_boundingboxes.sort(key=key_sort_param)
-    #print(f"after all_boundingboxes: {all_boundingboxes}")
 
     wordlist = list()
     wordlist.append(all_boundingboxes[0])
     # separate words with , on given axis
     for b in range(1, len(all_boundingboxes)):
-        if differenceForBoundingbox(all_boundingboxes[b-1], all_boundingboxes[b], axis, diff_param) and all_boundingboxes[b].letter != ",":
+        if differenceForBoundingbox(all_boundingboxes[b - 1], all_boundingboxes[b], axis, diff_param) and \
+                all_boundingboxes[b].letter != ",":
             wordlist.append(BoundingBox(",", -1, -1, -1, -1))
             wordlist.append(all_boundingboxes[b])
         else:
             wordlist.append(all_boundingboxes[b])
-    #print(f"wordlist: {wordlist}")
     return wordlist
 
+
 def splitList(all_boundingboxes):
+    """splits the list if the letter is "," by creating its own list
+
+    Args:
+        all_boundingboxes: list with all bounding box data class objects
+
+    Returns:
+        returns an interconnected list with boundingboxes
+    """
     # Create an empty list
     list_of_lists = []
 
-    #splittedList = list(list)
     counter = 0
     list_of_lists.append([])
     for boundingbox in all_boundingboxes:
-        if(boundingbox.letter == ","):
-            counter+=1
+        if (boundingbox.letter == ","):
+            counter += 1
             list_of_lists.append([])
         else:
             list_of_lists[counter].append(boundingbox)
 
     return list_of_lists
 
-def transformBoundingboxList(sorted_boundingboxes_by_words):
 
+def transformBoundingboxList(sorted_boundingboxes_by_words):
+    """transforms multiple letter Bounding boxes to a word Bounding box
+
+    Args:
+        sorted_boundingboxes_by_words: sorted list of bounding boxes by words in the following format: [[BoundingBox(letter='S', ...), BoundingBox(letter='T', ...), ...],[BoundingBox(letter='Z', ...), BoundingBox(letter='I', ...), ...],[BoundingBox(letter='H', ...), ...]]
+
+    Returns:
+        returns transformed list in the following format: [[BoundingBox(letter='START', ...)],[BoundingBox(letter='ZIEL', ...)],[BoundingBox(letter='HI', ...)]]
+    """
     wordBoundingboxlist = list()
 
     for word in sorted_boundingboxes_by_words:
@@ -261,7 +293,7 @@ def transformBoundingboxList(sorted_boundingboxes_by_words):
         ymax = 0
         for boundingbox in word[0]:
             wordString = wordString + boundingbox.letter
-            if(boundingbox.x < x):
+            if (boundingbox.x < x):
                 x = boundingbox.x
             if (boundingbox.y < y):
                 y = boundingbox.y
@@ -270,33 +302,41 @@ def transformBoundingboxList(sorted_boundingboxes_by_words):
             if (boundingbox.ymax > ymax):
                 ymax = boundingbox.ymax
 
-        wordBoundingboxlist.append(BoundingBox(wordString,x,y,xmax,ymax))
+        wordBoundingboxlist.append(BoundingBox(wordString, x, y, xmax, ymax))
 
     return wordBoundingboxlist
 
-def guessWord(word: str):
 
+def guessWord(word: str):
+    """compares given word string with the possible words to guess a word by comparing how many letters are the same
+
+    Args:
+        word: string of a word (letters of the word were guessed by the letter recognition)
+
+    Returns:
+        returns the guessed word
+    """
     accuracy_to_words = list()
 
-    for i,w in enumerate(all_possible_words):
+    for i, w in enumerate(all_possible_words):
         accuracy_to_words.append(0)
-        #not same length = cant be the word
-        if(len(word) != len(w)):
+        # not same length = cant be the word
+        if (len(word) != len(w)):
             continue
 
         same_letter_counter = 0
-        for letterindex,notUsed in enumerate(word):
-            if(word[letterindex] == w[letterindex].upper()):
-                same_letter_counter+=1
-        accuracy_to_words [i] = same_letter_counter/len(word)
+        for letterindex, notUsed in enumerate(word):
+            if (word[letterindex] == w[letterindex].upper()):
+                same_letter_counter += 1
+        accuracy_to_words[i] = same_letter_counter / len(word)
 
-    #choose a word from the given accuracy and return the highest possibility
+    # choose a word from the given accuracy and return the highest possibility
     highest_index = 0
-    for i,notUsed in enumerate(accuracy_to_words):
+    for i, notUsed in enumerate(accuracy_to_words):
         if accuracy_to_words[i] > accuracy_to_words[highest_index]:
             highest_index = i
 
-    if(accuracy_to_words[highest_index] >= word_min_accuracy):
+    if (accuracy_to_words[highest_index] >= word_min_accuracy):
         return all_possible_words[highest_index]
 
     else:
@@ -304,13 +344,20 @@ def guessWord(word: str):
 
 
 def getWords(all_boundingboxes):
-    #sorts array for words and returns the sorted array with words
+    """gets the words out of all the bounding boxes
+
+    Args:
+        all_boundingboxes: list with all bounding box data class objects
+
+    Returns:
+        returns a list with all words in the following format: [[BoundingBox(letter='START', ...)],[BoundingBox(letter='ZIEL', ...)],[BoundingBox(letter='HI', ...)]]
+    """
+    # sorts array for words and returns the sorted array with words
 
     wordlistX = sortListOfBoundingboxBy(0.1, operator.attrgetter('x'), all_boundingboxes, "x")
 
-    #split list by , for input
+    # split list by , for input
     splittedList = splitList(wordlistX)
-
 
     # Create an empty list
     wordlistY = []
@@ -320,25 +367,30 @@ def getWords(all_boundingboxes):
         returnwordlist = (sortListOfBoundingboxBy(1, operator.attrgetter('ymax'), word, "y"))
 
         splittedReturnwordlist = splitList(returnwordlist)
-        #print(f"splittedReturnwordlist: {splittedReturnwordlist}")
-        #to remove list stacking
+        # to remove list stacking
         for boundingbox in splittedReturnwordlist:
             wordlistY.append([])
             wordlistY[counter].append(boundingbox)
-            #print(f"wordlistY: {wordlistY}")
-            counter+=1
+            counter += 1
 
-    #transform each boundboxlist (word)
+    # transform each boundboxlist (word)
     transformedlist = transformBoundingboxList(wordlistY)
 
     # return the sorted words as an a boundbox list
     return transformedlist
 
 
-
-
 def drawBoundingBoxForWord(img, all_boundingboxes):
-    #draws bounding box around the words
+    """draws the bounding boxes for each word and labels it
+
+    Args:
+        img: image as ndarray
+        all_boundingboxes: list with all bounding box data class objects
+
+    Returns:
+        returns the image with the drawn boundingboxes
+    """
+    # draws bounding box around the words
     words = getWords(all_boundingboxes)
 
     for word in words:
