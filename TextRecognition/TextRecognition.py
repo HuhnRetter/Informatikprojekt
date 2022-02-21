@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import skimage.color
 import torch
+from matplotlib import pyplot as plt
 from skimage import color
 from skimage import draw
 from skimage import io
@@ -98,14 +99,10 @@ def setupModel():
 def showimage(img):
     """shows given image until ESC is pressed
 
-    :param img: image as ndarray
-    """
-    while (1):
-        cv2.imshow('text', img)
-        k = cv2.waitKey(1) & 0xFF
-        if k == 27:
-            break
-
+        :param img: image as ndarray
+        """
+    plt.imshow(img)
+    plt.show()
 
 def getContourArea(cnt):
     """gets the Area of the Bounding box
