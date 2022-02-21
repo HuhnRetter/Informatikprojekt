@@ -28,7 +28,6 @@ MODELFOLDER = "./Models/"
 MODELPATH = "LetterNeuralNetNE5BS26LR0001ACC92.pth"
 FILENEURALNET = f"{MODELFOLDER}{MODELPATH}"
 # following parameters need to be customized to the letter size
-area_size_param = 500
 padding = 10
 word_min_accuracy = 0.5
 
@@ -117,6 +116,23 @@ def getContourArea(cnt):
     return (w - x) * (h - y)
 
 
+def getAreaParam(contours):
+    """gets the AreaParam for filtering out bounding boxes of the insides of letters (A,b,d,...)
+
+    Args:
+        contours: list of all contours --> used to determine AreaParam for eliminating all contours inside letters
+
+    Returns:
+        returns a value for eliminating all contours inside letters
+    """
+    highest = 0
+    for cnt in contours:
+        area = getContourArea(cnt)
+        if(highest < area):
+            highest = area
+    return highest / 5.5
+
+
 def getBoundingBox(cnt):
     """gets the bounding box of the given contour
 
@@ -143,6 +159,7 @@ def getCrop(img, x, y, xmax, ymax):
     return img[x:xmax, y:ymax]
 
 
+
 def drawBoundingBox(img):
     """draws a bounding Box for each letter
 
@@ -154,6 +171,10 @@ def drawBoundingBox(img):
     model = setupModel()
     th3 = setupImage(img)
     contours = measure.find_contours(th3)
+
+    area_size_param = getAreaParam(contours)
+    print(area_size_param)
+
     for cnt in contours:
         area = getContourArea(cnt)
         print(f"boundingBoxArea for customizing in auto Bounding box:{area}")
