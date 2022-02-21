@@ -28,9 +28,10 @@ MODELFOLDER = "./Models/"
 MODELPATH = "LetterNeuralNetNE5BS26LR0001ACC92.pth"
 FILENEURALNET = f"{MODELFOLDER}{MODELPATH}"
 # following parameters need to be customized to the letter size
-padding = 10
+padding = 0.3 # percentage from given image
 word_min_accuracy = 0.5
-
+line_diff = 0.1
+word_distance = 3 # the higher the gaps between each letter -> the higher the word_distance
 
 @dataclass
 class BoundingBox:
@@ -173,11 +174,10 @@ def drawBoundingBox(img):
     contours = measure.find_contours(th3)
 
     area_size_param = getAreaParam(contours)
-    print(area_size_param)
 
     for cnt in contours:
         area = getContourArea(cnt)
-        print(f"boundingBoxArea for customizing in auto Bounding box:{area}")
+        #print(f"boundingBoxArea for customizing in auto Bounding box:{area}")
         if area > area_size_param:
             x, xmax, y, ymax = getBoundingBox(cnt)
             x -= padding
@@ -207,7 +207,16 @@ def useLetterRecognition(crop_img, model):
     :param model: loaded model of type LetterNeuralNet.ConvNet
     :return: returns the guessed letter as a string
     """
+
+    #adding a black border around the letter
+    bt = round(28*(1-padding))
+    color_name = 0
+    value = [color_name for i in range(3)]
+    crop_img = cv2.copyMakeBorder(crop_img, bt, bt, bt, bt, cv2.BORDER_CONSTANT, value=value)
+
     crop_img = resize(crop_img, (28, 28), anti_aliasing=True)
+
+    #showimage(crop_img)
 
     numpy_crop_img = np.array(crop_img)
     flipped_img = np.fliplr(numpy_crop_img)
@@ -375,7 +384,7 @@ def getWords(all_boundingboxes):
     """
     # sorts array for words and returns the sorted array with words
 
-    wordlistX = sortListOfBoundingboxBy(0.1, operator.attrgetter('x'), all_boundingboxes, "x")
+    wordlistX = sortListOfBoundingboxBy(line_diff, operator.attrgetter('x'), all_boundingboxes, "x")
 
     # split list by , for input
     splittedList = splitList(wordlistX)
@@ -385,7 +394,7 @@ def getWords(all_boundingboxes):
 
     counter = 0
     for word in splittedList:
-        returnwordlist = (sortListOfBoundingboxBy(1, operator.attrgetter('ymax'), word, "y"))
+        returnwordlist = (sortListOfBoundingboxBy(word_distance, operator.attrgetter('ymax'), word, "y"))
 
         splittedReturnwordlist = splitList(returnwordlist)
         # to remove list stacking
