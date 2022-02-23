@@ -24,7 +24,7 @@ all_classes = ["A", "B", "C", "D", "E", "F",
 
 all_possible_words = ["Start", "Ziel"]
 
-FILETEXTTEST = "./TestImages/Test7.png"
+FILETEXTTEST = "./TestImages/Test.png"
 MODELFOLDER = "./Models/"
 MODELPATH = "LetterNeuralNetNE5BS26LR0001ACC92.pth"
 FILENEURALNET = f"{MODELFOLDER}{MODELPATH}"
