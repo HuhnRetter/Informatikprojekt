@@ -6,6 +6,8 @@ The letter recognition uses a convolutional neural net with 2 convolutional laye
 
 For training and testing I used the EMNIST Dataset for letters, which contains images of handwritten letters. Here are some examples:
 
+![output](U:\Studium\5.Semester\Informatikprojekt\Informatikprojekt\TextRecognition\Images\output.png)
+
 
 
 ## Convolutional Neural Net

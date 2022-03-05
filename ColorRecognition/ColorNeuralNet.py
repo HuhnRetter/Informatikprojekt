@@ -1,8 +1,10 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
 import torchvision
 from torch.utils.data import Dataset, DataLoader
+from HelperFunctions.HelperPhases import *
 
 ############## TENSORBOARD ########################
 from torch.utils.tensorboard import SummaryWriter
@@ -12,11 +14,11 @@ from torch.utils.tensorboard import SummaryWriter
 from HelperFunctions.HelperFunctions import *
 
 device = torch.device('cpu')
+confusionmatrixdevice = torch.device('cpu')
 
 all_classes = ["white", "red", "green", "other"]
 
-
-#Paths
+# Paths
 DATASETFOLDER = './Datasets/'
 TRAININGDATASETHLS = f"{DATASETFOLDER}TrainingDatasetHLS.txt"
 TESTDATASETHLS = f"{DATASETFOLDER}TestDatasetHLS.txt"
@@ -31,21 +33,20 @@ learning_rate = 0.001
 
 # 1 == True ; 0 == False
 load_model_from_file = 1
+save_trained_model = 1
 
-#Automatic Filename for loading and saving
+# Automatic Filename for loading and saving
 learning_rate_string = str(learning_rate).replace('.', '')
 MiddleFilename = f"HS{hidden_size}NE{num_epochs}BS{batch_size}LR{learning_rate_string}"
 EndFilename = "HLS.pth"
 FILE = f"{MODELFOLDER}ColorNeuralNet{MiddleFilename}{EndFilename}"
 
+# Manuel Filename for loading
+# FILE = "ColorNeuralNetHS25NE1500HLSACC8775.pth"
+# FILE = "ColorNeuralNetHS25NE10BS10HLSACC9075.pth"
 
-#Manuel Filename for loading
-#FILE = "ColorNeuralNetHS25NE1500HLSACC8775.pth"
-#FILE = "ColorNeuralNetHS25NE10BS10HLSACC9075.pth"
-
-#Writer for Tensorboard
+# Writer for Tensorboard
 writer = SummaryWriter(f'Tensorboard/runs/{MiddleFilename}')
-
 
 
 class NeuralNet(nn.Module):
@@ -87,6 +88,7 @@ class ColorDataset(Dataset):
     - n_y_data --> labels of type ndarray
     - n_transform --> transform function (for example ToTensor)
     """
+
     def __init__(self, DATASETPATH, transform=None):
         """initializes ColorDataset
 
@@ -126,6 +128,7 @@ class ToTensor:
     """Convert ndarrays to Tensors
 
     """
+
     def __call__(self, sample):
         inputs, targets = sample
         return torch.from_numpy(inputs), torch.from_numpy(targets)
@@ -135,6 +138,7 @@ class MulTransform:
     """multiply inputs with a given factor
 
     """
+
     def __init__(self, factor):
         self.factor = factor
 
@@ -161,79 +165,6 @@ def dataloaderSetup(DATASETPATH, normalized):
     return train_loader
 
 
-def trainingPhase(model, criterion, optimizer, train_loader):
-    """trains the given model with the given parameters.
-
-    iterates once through the train_loader in each epoch
-    and updates the weights in the model
-
-    After every quarter step update the acc and loss graph in Tensorboard
-    and after every epoch create Confusion matrix
-
-    :param model: current model of the class NeuralNet
-    :param criterion: loss function from torch.nn.modules.loss (for Example CrossEntropyLoss)
-    :param optimizer: optimizer from torch.optim (for Example Adam)
-    :param train_loader: dataloader with Training dataset
-    :return: returns trained model of the class NeuralNet
-    """
-    n_total_steps = len(train_loader)
-    n_total_steps_quarter = n_total_steps*.25
-    running_loss = 0.0
-    running_correct = 0
-    for epoch in range(num_epochs):
-        for i, (hsl, labels) in enumerate(train_loader):
-            model.to(device)
-            # Forward pass
-            outputs = model(hsl.to(device))
-            labels = convertFloatTensorToLongTensor(labels)
-            loss = criterion(outputs.to(device), labels.to(device))
-            # Backward and optimize
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            running_loss += loss.item()
-            _, predicted = torch.max(outputs.data, 1)
-            running_correct += (predicted == labels).sum().item()
-
-            if (i + 1) % (n_total_steps_quarter) == 0:
-                print(f'Epoch [{epoch + 1}/{num_epochs}], Step [{i + 1}/{n_total_steps}], Loss: {loss.item():.4f}')
-                ############## TENSORBOARD ########################
-                drawGraph(writer, running_loss, running_correct, n_total_steps, n_total_steps_quarter, epoch, i, predicted)
-                running_correct = 0
-                running_loss = 0.0
-                ###################################################
-        # Save confusion matrix to Tensorboard
-        writer.add_figure(f"Confusion matrix training from: {FILE}", createConfusionMatrix(train_loader, model, all_classes, 0), epoch)
-        writer.close()
-
-    model.to(torch.device("cpu"))
-    torch.save(model.state_dict(), FILE)
-    return model
-
-
-def testingPhase(model, test_loader):
-    """tests the model
-
-    outputs Acc of all classes and creates a Confusionmatrix
-
-    :param model: current model of the class NeuralNet
-    :param test_loader: dataloader with Test dataset
-    """
-    with torch.no_grad():
-        print("\n\nStarting with Testing!")
-        n_correct_array = [0, 0, 0, 0]
-        n_wrong_array = [0, 0, 0, 0]
-
-        # Console output of the Acc of every class but not as detailed as the confusion matrix
-        outputCompleteAcc(n_correct_array, n_wrong_array, test_loader, model, all_classes, 0)
-
-        # Save confusion matrix to Tensorboard
-        writer.add_figure(f"Confusion matrix testing from: {FILE}", createConfusionMatrix(test_loader, model, all_classes, 0))
-        writer.close()
-
-
-
 def main():
     model = NeuralNet(input_size, hidden_size, num_classes).to(device)
     if load_model_from_file == 1:
@@ -243,10 +174,11 @@ def main():
         criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
         train_loader = dataloaderSetup(TRAININGDATASETHLS, 1)
-        model = trainingPhase(model, criterion, optimizer, train_loader)
+        model = trainingPhase(model, criterion, optimizer, train_loader, num_epochs, 0.1, save_trained_model, device,
+                              confusionmatrixdevice, writer, FILE, all_classes, 0)
 
     test_loader = dataloaderSetup(TESTDATASETHLS, 1)
-    testingPhase(model, test_loader)
+    testingPhase(model, test_loader, writer, FILE, all_classes, 0, confusionmatrixdevice)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ import torch
 
 import ColorNeuralNet
 
-#initialize global variables
+# initialize global variables
 ############################
 mouseX = 0
 mouseY = 0
@@ -21,6 +21,8 @@ FILE = "ColorNeuralNetHS25NE150BS4LR0001HLS.pth"
 input_size = 2
 hidden_size = 25
 num_classes = 4
+
+
 ############################
 
 
@@ -94,19 +96,19 @@ def manuelColorSelect(hue_value, light_value):
     :param light_value: light_value from the given pixel
     :return: returns String with the color
     """
-    if (light_value > 229):
+    if light_value > 229:
         return "WHITE"
-    elif (hue_value < 5):
+    elif hue_value < 5:
         return "RED"
-    elif (hue_value < 22):
+    elif hue_value < 22:
         return "ORANGE"
-    elif (hue_value < 33):
+    elif hue_value < 33:
         return "YELLOW"
-    elif (hue_value < 78):
+    elif hue_value < 78:
         return "GREEN"
-    elif (hue_value < 131):
+    elif hue_value < 131:
         return "BLUE"
-    elif (hue_value < 170):
+    elif hue_value < 170:
         return "VIOLET"
     else:
         return "RED"
@@ -120,7 +122,7 @@ def showImage(img, model):
     """
 
     height, width, _ = img.shape
-    while (1):
+    while 1:
         cv2.imshow('image', img)
 
         hls_frame = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
@@ -142,8 +144,8 @@ def showImage(img, model):
         cv2.rectangle(img, (0, 0), (110, 40), (0, 0, 0), -1)
         cv2.putText(img, autoColor, (0, 30), 0, 1, (b, g, r), 2)
 
-        cv2.rectangle(img, (width-130, 0), (width, 40), (0, 0, 0), -1)
-        cv2.putText(img, manuelColor, (width-130, 30), 0, 1, (b, g, r), 2)
+        cv2.rectangle(img, (width - 130, 0), (width, 40), (0, 0, 0), -1)
+        cv2.putText(img, manuelColor, (width - 130, 30), 0, 1, (b, g, r), 2)
 
 
 if __name__ == "__main__":

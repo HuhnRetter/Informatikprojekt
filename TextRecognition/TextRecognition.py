@@ -24,15 +24,18 @@ all_classes = ["A", "B", "C", "D", "E", "F",
 
 all_possible_words = ["Start", "Ziel"]
 
-FILETEXTTEST = "./TestImages/Test.png"
+FILETEXTTEST = "./TestImages/Test8.png"
 MODELFOLDER = "./Models/"
 MODELPATH = "LetterNeuralNetNE5BS26LR0001ACC92.pth"
 FILENEURALNET = f"{MODELFOLDER}{MODELPATH}"
 # following parameters need to be customized to the letter size
-padding = 0.3 # percentage from given image
+padding = 0.3  # percentage from given image
 word_min_accuracy = 0.5
 line_diff = 0.1
-word_distance = 3 # the higher the gaps between each letter -> the higher the word_distance
+word_distance_from_prev_letter = 1  # the higher the gaps between each letter -> the higher the
+# word_distance_from_prev_letter
+word_distance = 10  # gap between each letter as pixels
+
 
 @dataclass
 class BoundingBox:
@@ -56,6 +59,7 @@ def setup():
     :return: returns img as ndarray
     """
     img = io.imread(FILETEXTTEST)
+    showimage(img, "original image")
     return img
 
 
@@ -76,12 +80,14 @@ def setupImage(img):
     except Exception as e:
         gray_img = color.rgb2gray(img)
 
-    # showimage(gray_img)
+    showimage(gray_img, "gray_scale", 'gray')
+    # gaussian blur was removed because if the letters are to close to each other they don't get recognized as 2
+    # different letters
     blur = gray_img
     # showimage(blur)
     # invert
     th3 = skimage.util.invert(blur)
-    # showimage(th3)
+    showimage(th3, "inverted gray_scale", 'gray')
     return th3
 
 
@@ -96,13 +102,17 @@ def setupModel():
     return model
 
 
-def showimage(img):
-    """shows given image until ESC is pressed
+def showimage(img, title, cmap=None):
+    """shows given image as a plot with a title
 
-        :param img: image as ndarray
-        """
-    plt.imshow(img)
+    :param img: image as ndarray
+    :param title: title of the plot
+    :param cmap: cmap of the plot
+    """
+    plt.imshow(img, cmap)
+    plt.title(title)
     plt.show()
+
 
 def getContourArea(cnt):
     """gets the Area of the Bounding box
@@ -117,16 +127,13 @@ def getContourArea(cnt):
 def getAreaParam(contours):
     """gets the AreaParam for filtering out bounding boxes of the insides of letters (A,b,d,...)
 
-    Args:
-        contours: list of all contours --> used to determine AreaParam for eliminating all contours inside letters
-
-    Returns:
-        returns a value for eliminating all contours inside letters
+    :param contours: list of all contours --> used to determine AreaParam for eliminating all contours inside letters
+    :return: returns a value for eliminating all contours inside letters
     """
     highest = 0
     for cnt in contours:
         area = getContourArea(cnt)
-        if(highest < area):
+        if (highest < area):
             highest = area
     return highest / 5.5
 
@@ -157,7 +164,6 @@ def getCrop(img, x, y, xmax, ymax):
     return img[x:xmax, y:ymax]
 
 
-
 def drawBoundingBox(img):
     """draws a bounding Box for each letter
 
@@ -174,7 +180,7 @@ def drawBoundingBox(img):
 
     for cnt in contours:
         area = getContourArea(cnt)
-        #print(f"boundingBoxArea for customizing in auto Bounding box:{area}")
+        # print(f"boundingBoxArea for customizing in auto Bounding box:{area}")
         if area > area_size_param:
             x, xmax, y, ymax = getBoundingBox(cnt)
             x -= padding
@@ -205,46 +211,68 @@ def useLetterRecognition(crop_img, model):
     :return: returns the guessed letter as a string
     """
 
-    #adding a black border around the letter
-    bt = round(28*(1-padding))
+    fig, axs = plt.subplots(1, 4)
+
+    # adding a black border around the letter
+    axs[0].imshow(crop_img, "gray")
+    axs[0].set_title("cropped image", fontsize=10)
+
+    bt = round(28 * (1 - padding))
     color_name = 0
     value = [color_name for i in range(3)]
     crop_img = cv2.copyMakeBorder(crop_img, bt, bt, bt, bt, cv2.BORDER_CONSTANT, value=value)
+    axs[1].imshow(crop_img, "gray")
+    axs[1].set_title("blackborder added", fontsize=10)
 
     crop_img = resize(crop_img, (28, 28), anti_aliasing=True)
 
-    #showimage(crop_img)
-
+    axs[2].imshow(crop_img, "gray")
+    axs[2].set_title("resized", fontsize=10)
     numpy_crop_img = np.array(crop_img)
     flipped_img = np.fliplr(numpy_crop_img)
     turned_img = np.rot90(flipped_img)
+    axs[3].imshow(turned_img, "gray")
+    axs[3].set_title("axis correction", fontsize=10)
 
     crop_img_tensor = torch.from_numpy(turned_img.copy())
+    print(f"before tensor transformation: {crop_img_tensor.shape}")
     crop_img_tensor = crop_img_tensor.unsqueeze(dim=0)
     c_crop_img_tensor = crop_img_tensor.unsqueeze(0)
     c_crop_img_tensor = c_crop_img_tensor.float()
-
+    print(f"after tensor transformation: {c_crop_img_tensor.shape}")
     with torch.no_grad():
         outputs = model(c_crop_img_tensor)
     predicted = torch.argmax(outputs)
+    fig.suptitle(f'Guessed letter: {all_classes[predicted]}')
+    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
     return all_classes[predicted]
+
+
+def printForBoundingBoxes(firstmessage, all_boundingboxes):
+    """prints out all elements from a given list
+
+    :param firstmessage:
+    :param all_boundingboxes:
+    """
+    print(f"\n{firstmessage} \n")
+    for boundingbox in all_boundingboxes:
+        print(boundingbox)
+    print("\n")
 
 
 def differenceForBoundingbox(prev, current, axis, diff_param):
     """compares distance between two points
 
-    Args:
-        prev: previous letter as a boundingbox data class object
-        current: current letter as a boundingbox data class object
-        axis: describes on which axis the two boundingbox data class objects are compared (x or y)
-        diff_param: parameter for setting the allowed interval (if axis == x --> checking same row, if axis == y --> checking if letters belong to the same word)
-
-    Returns:
-        returns a boolean value for checking if the letters are on the same/similar row (axis == x) or if the letters belong to the same word (axis == y)
+    :param prev: previous letter as a boundingbox data class object
+    :param current: current letter as a boundingbox data class object
+    :param axis: describes on which axis the two boundingbox data class objects are compared (x or y)
+    :param diff_param: parameter for setting the allowed interval (if axis == x --> checking same row, if axis == y --> checking if letters belong to the same word)
+    :return: returns a boolean value for checking if the letters are on the same/similar row (axis == x) or if the letters belong to the same word (axis == y)
 
     """
     if axis == "y":
-        return abs(prev.ymax - current.y) > (prev.getYsize() * diff_param)
+        return abs(prev.ymax - current.y) > word_distance  # (prev.getYsize() * diff_param)
     else:
         return abs(prev.xmax - current.xmax) > (prev.getXsize() * diff_param)
 
@@ -252,18 +280,15 @@ def differenceForBoundingbox(prev, current, axis, diff_param):
 def sortListOfBoundingboxBy(diff_param, key_sort_param, all_boundingboxes, axis):
     """sorts the List of BoundingBox by the given parameters
 
-    Args:
-        diff_param: parameter for setting the allowed interval (if axis == x --> checking same row, if axis == y --> checking if letters belong to the same word)
-        key_sort_param: parameter by which the list is being sorted
-        all_boundingboxes: list with all bounding box data class objects
-        axis: describes on which axis the two boundingbox data class objects are compared (x or y)
-
-    Returns:
-        returns sorted List with bounding box data class objects
-
+    :param diff_param: parameter for setting the allowed interval (if axis == x --> checking same row, if axis == y --> checking if letters belong to the same word)
+    :param key_sort_param: parameter by which the list is being sorted
+    :param all_boundingboxes: list with all bounding box data class objects
+    :param axis: describes on which axis the two boundingbox data class objects are compared (x or y)
+    :return: returns sorted List with bounding box data class objects
     """
+    printForBoundingBoxes(f"\nallboundingboxes before being sorted on {axis} axis:", all_boundingboxes)
     all_boundingboxes.sort(key=key_sort_param)
-
+    printForBoundingBoxes(f"allboundingboxes after being sorted on {axis} axis:", all_boundingboxes)
     wordlist = list()
     wordlist.append(all_boundingboxes[0])
     # separate words with , on given axis
@@ -274,17 +299,15 @@ def sortListOfBoundingboxBy(diff_param, key_sort_param, all_boundingboxes, axis)
             wordlist.append(all_boundingboxes[b])
         else:
             wordlist.append(all_boundingboxes[b])
+    printForBoundingBoxes(f"words split by , :", wordlist)
     return wordlist
 
 
 def splitList(all_boundingboxes):
     """splits the list if the letter is "," by creating its own list
 
-    Args:
-        all_boundingboxes: list with all bounding box data class objects
-
-    Returns:
-        returns an interconnected list with boundingboxes
+    :param all_boundingboxes: list with all bounding box data class objects
+    :return: returns an interconnected list with boundingboxes
     """
     # Create an empty list
     list_of_lists = []
@@ -304,11 +327,8 @@ def splitList(all_boundingboxes):
 def transformBoundingboxList(sorted_boundingboxes_by_words):
     """transforms multiple letter Bounding boxes to a word Bounding box
 
-    Args:
-        sorted_boundingboxes_by_words: sorted list of bounding boxes by words in the following format: [[BoundingBox(letter='S', ...), BoundingBox(letter='T', ...), ...],[BoundingBox(letter='Z', ...), BoundingBox(letter='I', ...), ...],[BoundingBox(letter='H', ...), ...]]
-
-    Returns:
-        returns transformed list in the following format: [[BoundingBox(letter='START', ...)],[BoundingBox(letter='ZIEL', ...)],[BoundingBox(letter='HI', ...)]]
+    :param sorted_boundingboxes_by_words: sorted list of bounding boxes by words in the following format: [[BoundingBox(letter='S', ...), BoundingBox(letter='T', ...), ...],[BoundingBox(letter='Z', ...), BoundingBox(letter='I', ...), ...],[BoundingBox(letter='H', ...), ...]]
+    return: returns transformed list in the following format: [[BoundingBox(letter='START', ...)],[BoundingBox(letter='ZIEL', ...)],[BoundingBox(letter='HI', ...)]]
     """
     wordBoundingboxlist = list()
 
@@ -320,13 +340,13 @@ def transformBoundingboxList(sorted_boundingboxes_by_words):
         ymax = 0
         for boundingbox in word[0]:
             wordString = wordString + boundingbox.letter
-            if (boundingbox.x < x):
+            if boundingbox.x < x:
                 x = boundingbox.x
-            if (boundingbox.y < y):
+            if boundingbox.y < y:
                 y = boundingbox.y
-            if (boundingbox.xmax > xmax):
+            if boundingbox.xmax > xmax:
                 xmax = boundingbox.xmax
-            if (boundingbox.ymax > ymax):
+            if boundingbox.ymax > ymax:
                 ymax = boundingbox.ymax
 
         wordBoundingboxlist.append(BoundingBox(wordString, x, y, xmax, ymax))
@@ -337,11 +357,8 @@ def transformBoundingboxList(sorted_boundingboxes_by_words):
 def guessWord(word: str):
     """compares given word string with the possible words to guess a word by comparing how many letters are the same
 
-    Args:
-        word: string of a word (letters of the word were guessed by the letter recognition)
-
-    Returns:
-        returns the guessed word
+    :param word: string of a word (letters of the word were guessed by the letter recognition)
+    :return: returns the guessed word
     """
     accuracy_to_words = list()
 
@@ -373,11 +390,8 @@ def guessWord(word: str):
 def getWords(all_boundingboxes):
     """gets the words out of all the bounding boxes
 
-    Args:
-        all_boundingboxes: list with all bounding box data class objects
-
-    Returns:
-        returns a list with all words in the following format: [[BoundingBox(letter='START', ...)],[BoundingBox(letter='ZIEL', ...)],[BoundingBox(letter='HI', ...)]]
+    :param all_boundingboxes: list with all bounding box data class objects
+    return: returns a list with all words in the following format: [[BoundingBox(letter='START', ...)],[BoundingBox(letter='ZIEL', ...)],[BoundingBox(letter='HI', ...)]]
     """
     # sorts array for words and returns the sorted array with words
 
@@ -391,7 +405,8 @@ def getWords(all_boundingboxes):
 
     counter = 0
     for word in splittedList:
-        returnwordlist = (sortListOfBoundingboxBy(word_distance, operator.attrgetter('ymax'), word, "y"))
+        returnwordlist = (
+            sortListOfBoundingboxBy(word_distance_from_prev_letter, operator.attrgetter('ymax'), word, "y"))
 
         splittedReturnwordlist = splitList(returnwordlist)
         # to remove list stacking
@@ -403,19 +418,16 @@ def getWords(all_boundingboxes):
     # transform each boundboxlist (word)
     transformedlist = transformBoundingboxList(wordlistY)
 
-    # return the sorted words as an a boundbox list
+    # return the sorted words as a boundbox list
     return transformedlist
 
 
 def drawBoundingBoxForWord(img, all_boundingboxes):
     """draws the bounding boxes for each word and labels it
 
-    Args:
-        img: image as ndarray
-        all_boundingboxes: list with all bounding box data class objects
-
-    Returns:
-        returns the image with the drawn boundingboxes
+    :param img: image as ndarray
+    :param all_boundingboxes: list with all bounding box data class objects
+    :return: returns the image with the drawn boundingboxes
     """
     # draws bounding box around the words
     words = getWords(all_boundingboxes)
@@ -450,6 +462,6 @@ if __name__ == "__main__":
     img = setup()
     copy_img = np.copy(img)
     b_img, all_boundingboxes = drawBoundingBox(img)
-    showimage(b_img)
+    showimage(b_img, "final image with letter recognition")
     w_img = drawBoundingBoxForWord(copy_img, all_boundingboxes)
-    showimage(w_img)
+    showimage(w_img, "final image with word recognition")

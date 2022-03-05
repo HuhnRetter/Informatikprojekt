@@ -6,16 +6,16 @@ import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
 
-import ImageNeuralNetTransferLearning
+import ImageTransferLearning
 
 # Parameters
 TESTFOLDER = './TestImages'
 MODELFOLDER = './Models/'
-MODELFILE = "ImageNeuralNetNE3BS3LR001ACC94.pth"
+MODELFILE = "ImageTransferLearningNE3BS3LR001ACC94.pth"
 FILENEURALNET = MODELFOLDER + MODELFILE
 all_classes = ["dog", "flower", "other"]
 
-#batch_size must be same as images
+# batch_size must be same as images
 batch_size = 9
 
 
@@ -41,7 +41,7 @@ def setupModel():
 
     :return: returns the loaded model
     """
-    model = ImageNeuralNetTransferLearning.neuralNetSetup()
+    model = ImageTransferLearning.neuralNetSetup()
     model.load_state_dict(torch.load(FILENEURALNET))
     model.eval()
     return model
@@ -82,6 +82,7 @@ def useImageRecognition(test_loader, model, ax, fig):
                 i += 1
             fig.tight_layout()
             plt.show()
+
 
 if __name__ == "__main__":
     test_loader = setupDatasetLoader()
