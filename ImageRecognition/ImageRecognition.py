@@ -5,6 +5,7 @@ import torch
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
+import numpy as np
 
 import ImageTransferLearning
 
@@ -72,6 +73,7 @@ def useImageRecognition(test_loader, model, ax, fig):
             for image in inputs:
                 np_array = image.numpy()
                 np_array = np_array.swapaxes(0, 2)
+                np_array = np.rot90(np_array, 3)
                 ax[i].imshow(np_array)
                 i += 1
             i = 0

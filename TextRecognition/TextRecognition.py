@@ -32,8 +32,7 @@ FILENEURALNET = f"{MODELFOLDER}{MODELPATH}"
 padding = 0.3  # percentage from given image
 word_min_accuracy = 0.5
 line_diff = 0.1
-word_distance_from_prev_letter = 1  # the higher the gaps between each letter -> the higher the
-# word_distance_from_prev_letter
+word_distance_from_prev_letter = 1  # the higher the gaps between each letter -> the higher the word_distance_from_prev_letter
 word_distance = 10  # gap between each letter as pixels
 
 

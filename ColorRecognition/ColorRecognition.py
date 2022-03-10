@@ -11,18 +11,20 @@ mouseY = 0
 all_classes = ["WHITE", "RED", "GREEN", "OTHER"]
 ############################
 
-# NeuralNetSettings
+# Model Settings
 ############################
-FILECOLORTEST = "color_test2.jpg"
+TESTFOLDER = "./TestImages/"
+TESTPATH = "color_test2.jpg"
+FILECOLORTEST = f"{TESTFOLDER}{TESTPATH}"
 
-# FILE = "ColorNeuralNetHS25NE10BS10HLSACC9075.pth"
-# FILE = "ColorNeuralNetHS25NE1500HLSACC8775.pth"
-FILE = "ColorNeuralNetHS25NE150BS4LR0001HLS.pth"
+MODELFOLDER = "./Models/"
+# MODELPATH = "ColorNeuralNetHS25NE10BS10HLSACC9075.pth"
+# MODELPATH = "ColorNeuralNetHS25NE1500HLSACC8775.pth"
+MODELPATH = "ColorNeuralNetHS25NE150BS4LR0001HLS.pth"
+FILE = f"{MODELFOLDER}{MODELPATH}"
 input_size = 2
 hidden_size = 25
 num_classes = 4
-
-
 ############################
 
 
