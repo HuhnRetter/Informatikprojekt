@@ -50,7 +50,7 @@ I tested the model with different parameters and in conclusion I choose the para
 
 The following confusion matrix shows the accuracy for each color:
 
-![ConfusionmatrixTrain](U:\Studium\5.Semester\Informatikprojekt\Informatikprojekt\ColorRecognition\Images\ConfusionmatrixTrain.png)
+![ConfusionmatrixTrain](https://github.com/HuhnRetter/Informatikprojekt/blob/main/ColorRecognition/Images/ConfusionmatrixTrain.png)
 
 The average color recognition accuracy is 94,25%. The trained model shows difficulties in predicting the color class "other". There are multiple possible reasons for this low value in comparison to the other color classes. One of them is that the dataset is too small or there is variety of "other" colors is too low. Another reason could be that not using the S-Value of HSL results in a lower accuracy.
 
@@ -58,7 +58,7 @@ The average color recognition accuracy is 94,25%. The trained model shows diffic
 
 The following confusion matrix shows the accuracy for each color:
 
-![](U:\Studium\5.Semester\Informatikprojekt\Informatikprojekt\ColorRecognition\Images\ConfusionmatrixTest.png)
+![ConfusionmatrixTest](https://github.com/HuhnRetter/Informatikprojekt/blob/main/ColorRecognition/Images/ConfusionmatrixTest.png)
 
 The average color recognition accuracy is 87,75%. The trained model shows a good generalization for the color recognition of red, green and "other". The color recognition of the white color seems to have a rather bad generalization in comparison to the other colors. There are multiple possible reasons for this problem. One of them could be that the balancing of the white colors for the training dataset is bad. This could mean that the dataset does not cover all possible shades of white, which results in a worse accuracy of white with the testing dataset. Another reason could be that because I manually selected each color, that there is a some noise in the testing or training dataset. Both reasons would support why the white colors are in 20% of the cases guessed as "other". 
 
@@ -66,7 +66,7 @@ The average color recognition accuracy is 87,75%. The trained model shows a good
 
 The following GIF shows an example of how the color recognition looks like to the user:
 
-![ColorRecognition](U:\Studium\5.Semester\Informatikprojekt\Informatikprojekt\ColorRecognition\Images\ColorRecognition.gif)
+![ColorRecognition](https://github.com/HuhnRetter/Informatikprojekt/blob/main/ColorRecognition/Images/ColorRecognition.gif)
 
 ### Controls for the user
 

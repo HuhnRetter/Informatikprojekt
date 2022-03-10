@@ -14,7 +14,7 @@ I used the EMNIST Dataset for training a generalized model for letter recognitio
 
 Here are some examples:
 
-![output](U:\Studium\5.Semester\Informatikprojekt\Informatikprojekt\TextRecognition\Images\output.png)
+![output](https://github.com/HuhnRetter/Informatikprojekt/tree/main/TextRecognition/Images/output.png)
 
 
 
@@ -75,7 +75,7 @@ From multiple tests with different `batch_size` values, and I concluded that the
 
 The following confusion matrix shows the accuracy for each letter:
 
-![ConfusionmatrixTrain](U:\Studium\5.Semester\Informatikprojekt\Informatikprojekt\TextRecognition\Images\ConfusionmatrixTrain.png)
+![ConfusionmatrixTrain](https://github.com/HuhnRetter/Informatikprojekt/tree/main/TextRecognition/Images/ConfusionmatrixTrain.png)
 
 The average letter recognition accuracy is 95,11%. the trained model shows difficulties in predicting "G", "I", "L". The reason for this could be that in some fonts L and I look very similar, for example in this font: I and l (big I and small L). The same applies to the letter "G", in some cases it looks very similar to the letter "Q", because the letters in the dataset are handwritten.
 
@@ -83,7 +83,7 @@ The average letter recognition accuracy is 95,11%. the trained model shows diffi
 
 The following confusion matrix shows the accuracy for each letter:
 
-![ConfusionmatrixTest](U:\Studium\5.Semester\Informatikprojekt\Informatikprojekt\TextRecognition\Images\ConfusionmatrixTest.png)
+![ConfusionmatrixTest](https://github.com/HuhnRetter/Informatikprojekt/tree/main/TextRecognition/Images/ConfusionmatrixTest.png)
 
 The average letter recognition accuracy is 93%. Both confusion matrices have very similar accuracies for each letter, which concludes that the trained model is generalized for letter recognition. The only exceptions are the previous mentioned letters. 
 
@@ -91,7 +91,7 @@ The average letter recognition accuracy is 93%. Both confusion matrices have ver
 
 The following GIF shows an example of how the text recognition looks like to the user:
 
-<img src="U:\Studium\5.Semester\Informatikprojekt\Informatikprojekt\TextRecognition\Images\WordRecognition.gif" alt="WordRecognition" style="zoom: 150%;" />
+<img src="https://github.com/HuhnRetter/Informatikprojekt/tree/main/TextRecognition/Images/WordRecognition.gif" alt="WordRecognition" style="zoom: 150%;" />
 
 For the text recognition the user needs to input an image containing letters/words. The text recognition works for multiple words in the same row. The user needs to configurate the following parameter to determine the distance between each letter in a word :
 
@@ -101,7 +101,7 @@ word_distance = 10  # gap between each letter as pixels
 
 In the beginning of the text recognition the script needs to find every letter. For this process it determines bounding boxes for each letter and saves the data for later usage. If the contour of a possible letter fulfils the following condition `contour_area > area_size_param` . The contour gets transformed into a bounding box. After that it will be cropped out of the original image and gets a black border, which size the black border gets, correlates to the parameter `padding`. After that the `cropped_image` is resized to **28x28**. In the last step the Image gets an axis correction to match the orientation of the training data. In the following the complete process of the letter transformation is shown:
 
-![exampleLetter](U:\Studium\5.Semester\Informatikprojekt\Informatikprojekt\TextRecognition\Images\exampleLetter.png)
+![exampleLetter](https://github.com/HuhnRetter/Informatikprojekt/tree/main/TextRecognition/Images/exampleLetter.png)
 
 
 

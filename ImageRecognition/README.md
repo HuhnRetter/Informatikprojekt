@@ -8,7 +8,7 @@ The training dataset consists of **31.200** images for all classes and **10.400*
 
 Here are some examples for each class:
 
-![example](U:\Studium\5.Semester\Informatikprojekt\Informatikprojekt\ImageRecognition\Images\example.png)
+![example](https://github.com/HuhnRetter/Informatikprojekt/tree/main/ImageRecognition/Images/example.png)
 
 ## Convolutional Neural Network
 
@@ -43,7 +43,7 @@ From multiple tests with different `batch_size` values, and I concluded that the
 
 The following confusion matrix shows the accuracy for each class:
 
-![ConfusionmatrixTrain](U:\Studium\5.Semester\Informatikprojekt\Informatikprojekt\ImageRecognition\Images\ConfusionmatrixTrain.png)
+![ConfusionmatrixTrain](https://github.com/HuhnRetter/Informatikprojekt/tree/main/ImageRecognition/Images/ConfusionmatrixTrain.png)
 
 The average image recognition accuracy is 97,67%. The trained model does not show any difficulties at predicting the classes.
 
@@ -51,7 +51,7 @@ The average image recognition accuracy is 97,67%. The trained model does not sho
 
 The following confusion matrix shows the accuracy for each class:
 
-![ConfusionmatrixTest](U:\Studium\5.Semester\Informatikprojekt\Informatikprojekt\ImageRecognition\Images\ConfusionmatrixTest.png)
+![ConfusionmatrixTest](https://github.com/HuhnRetter/Informatikprojekt/tree/main/ImageRecognition/Images/ConfusionmatrixTest.png)
 
 The average image recognition accuracy is 94,33%. The trained model shows difficulties in predicting "other". The reason for this could be that the model wasn't trained for enough epochs. In almost all cases the model is generalized enough to differentiate between flowers, dogs and others.
 
@@ -59,7 +59,7 @@ The average image recognition accuracy is 94,33%. The trained model shows diffic
 
 The following PNG shows an example of how the image recognition looks like to the user:
 
-![ImageRecognition](U:\Studium\5.Semester\Informatikprojekt\Informatikprojekt\ImageRecognition\Images\ImageRecognition.png)
+![ImageRecognition](https://github.com/HuhnRetter/Informatikprojekt/tree/main/ImageRecognition/Images/ImageRecognition.png)
 
 The user need to adjust the following parameters in case he wants to use a different trained model or a different folder:
 

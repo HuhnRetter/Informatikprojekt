@@ -8,8 +8,8 @@ This project has the following examples of machine learning:
 
 [TextRecognition](https://github.com/HuhnRetter/Informatikprojekt/tree/main/TextRecognition)
 
-![WordRecognition](https://github.com/HuhnRetter/Informatikprojekt/blob/main/ColorRecognition/Images/WordRecognition.gif)
+![WordRecognition](https://github.com/HuhnRetter/Informatikprojekt/blob/main/TextRecognition/Images/WordRecognition.gif)
 
 [ImageRecognition](https://github.com/HuhnRetter/Informatikprojekt/tree/main/ImageRecognition)
 
-![ImageRecognition](https://github.com/HuhnRetter/Informatikprojekt/blob/main/ColorRecognition/Images/ImageRecognition.png)
+![ImageRecognition](https://github.com/HuhnRetter/Informatikprojekt/blob/main/ImageRecognition/Images/ImageRecognition.png)
