@@ -1,17 +1,11 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import torch
 import torch.nn as nn
 import torchvision
 from torch.utils.data import Dataset, DataLoader
-from HelperFunctions.HelperPhases import *
-
 ############## TENSORBOARD ########################
 from torch.utils.tensorboard import SummaryWriter
 # tensorboard --logdir=runs
 ###################################################
-
-from HelperFunctions.HelperFunctions import *
+from HelperFunctions.HelperPhases import *
 
 device = torch.device('cpu')
 confusionmatrixdevice = torch.device('cpu')

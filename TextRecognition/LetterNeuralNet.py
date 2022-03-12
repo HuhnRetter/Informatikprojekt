@@ -20,7 +20,7 @@ all_classes = ["A", "B", "C", "D", "E", "F",
                "Y", "Z"]
 
 # Paths
-DATASETPATH = 'U:/Studium/5.Semester/Informatikprojekt/Backups/BackupNew/TextRecognition/data'
+DATASETPATH = 'C:/Users/matri/Desktop/Informatikprojekt/Backups/BackupNew/TextRecognition/data'
 MODELFOLDER = './Models/'
 # Parameter
 num_epochs = 10

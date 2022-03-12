@@ -31,8 +31,8 @@ def trainingPhase(model, criterion, optimizer, train_loader, num_epochs, print_e
     running_loss = 0.0
     running_correct = 0
     starting_time = time.time()
+    model.to(device)
     for epoch in range(num_epochs):
-
         if epoch + 1 > 1:
             print("\n####################################Training Resumed#######################################\n")
 
@@ -40,11 +40,10 @@ def trainingPhase(model, criterion, optimizer, train_loader, num_epochs, print_e
             if label_start_at == 1:
                 # Transform labels if start with 1
                 labels = torch.add(labels, -1)
-            model.to(device)
             # Forward pass
             outputs = model(hsl.to(device))
-            labels = convertFloatTensorToLongTensor(labels)
-            loss = criterion(outputs.to(device), labels.to(device))
+            labels = convertFloatTensorToLongTensor(labels).to(device)
+            loss = criterion(outputs, labels)
             # Backward and optimize
             optimizer.zero_grad()
             loss.backward()
@@ -80,7 +79,7 @@ def trainingPhase(model, criterion, optimizer, train_loader, num_epochs, print_e
     return model
 
 
-def testingPhase(model, test_loader, writer, FILE, all_classes, label_start_at, device):
+def testingPhase(model, test_loader, writer, FILE, all_classes, label_start_at, device, output_examples_check):
     """tests the model
 
     outputs Acc of all classes and creates a Confusionmatrix
@@ -92,6 +91,7 @@ def testingPhase(model, test_loader, writer, FILE, all_classes, label_start_at, 
     :param all_classes: list of all possible classes
     :param label_start_at: value for correction of all labels in the dataset if starts at 1
     :param device: device on which the tensors are being processed for example: "cuda", "cpu", "dml"
+    :param output_examples_check: value to enable the output of wrong examples 1 --> True; 0 --> False
     """
     with torch.no_grad():
         print("\n\nStarting with Testing!")
@@ -106,7 +106,7 @@ def testingPhase(model, test_loader, writer, FILE, all_classes, label_start_at, 
         # Console output of the Acc of every class but not as detailed as the confusion matrix
 
         # Save confusion matrix to Tensorboard
-        currentConfusionMatrix = createConfusionMatrix(test_loader, model, all_classes, label_start_at, 1, device)
+        currentConfusionMatrix = createConfusionMatrix(test_loader, model, all_classes, label_start_at, output_examples_check, device)
         plt.show()
         writer.add_figure(f"Confusion matrix testing from: {FILE}", currentConfusionMatrix)
         writer.close()

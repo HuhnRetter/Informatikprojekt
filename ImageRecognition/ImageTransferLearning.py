@@ -17,14 +17,15 @@ confusionmatrixdevice = torch.device('dml')
 all_classes = ["dog", "flower", "other"]
 
 # Paths
-DATASETPATH = 'U:/Studium/5.Semester/Informatikprojekt/Backups/BackupNew/ImageRecognition/datasets'
+DATASETPATH = 'C:/Users/matri/Desktop/Informatikprojekt/Backups/BackupNew/ImageRecognition/datasets'
 MODELFOLDER = './Models/'
 # Parameter
 num_classes = len(all_classes)
 num_epochs = 3
 batch_size = 3
 learning_rate = 0.01
-
+num_workers = 2
+pin_memory = True
 # 1 == True ; 0 == False
 load_model_from_file = 1
 save_trained_model = 1
@@ -59,7 +60,7 @@ def neuralNetSetup():
     return model
 
 
-def dataloaderSetup():
+def dataloaderSetup(num_workers=0, pin_memory=False):
     """setups train and test dataloader from the given path
 
     :return: returns train and test loader
@@ -85,14 +86,15 @@ def dataloaderSetup():
     train_dataset = ImageFolder(root=f'{DATASETPATH}/train', transform=data_transforms['train'])
     test_dataset = ImageFolder(root=f'{DATASETPATH}/test', transform=data_transforms['test'])
     # Data loader
-    train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
+    train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True,
+                                               num_workers=num_workers, pin_memory=pin_memory)
+    test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=pin_memory)
     return train_loader, test_loader
 
 
 def main():
     model = neuralNetSetup().to(device)
-    train_loader, test_loader = dataloaderSetup()
+    train_loader, test_loader = dataloaderSetup(num_workers, pin_memory)
     if load_model_from_file == 1:
         model = load_model(model, FILE)
     else:

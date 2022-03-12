@@ -45,25 +45,23 @@ def createConfusionMatrix(loader, model, all_classes, label_start_at, output_exa
 
             # for output in console
             _, predicted = torch.max(output.data, 1)
-
-            output = (torch.max(torch.exp(output), 1)[1]).data.cpu().numpy()
-
+            #print(f"\n\noutput before: {output}")
+            output = (torch.max(torch.exp(output), 1)[1]).detach().cpu().numpy()
+            #print(f"output after: {output}")
             y_pred.extend(output)  # save prediction
-
+            #print(f"prediction: {y_pred}")
             if label_start_at == 1:
                 # Label transforms because labels start with 1
                 labels = torch.add(labels, -1)
 
             longLabel = convertFloatTensorToLongTensor(labels)
             # for output in console
-            n_correct_array, n_wrong_array, output_examples = countCorrectlyGuessed(longLabel.to(device), predicted,
-                                                                                    n_correct_array, n_wrong_array,
-                                                                                    output_examples)
-
-            labels = labels.data.cpu().numpy()
-
+            n_correct_array, n_wrong_array, output_examples = countCorrectlyGuessed(longLabel.to(device), predicted, n_correct_array, n_wrong_array, output_examples)
+            labels = labels.data.detach().cpu().numpy()
+            #print(f"labels: {labels}")
+            #print(f"longLabel: {longLabel}")
             y_true.extend(labels)  # save ground truth
-
+            #print(f"y_true: {y_true}")
             # print to see progress because sometimes it takes a while and pauses
             progressBarWithTime(i, n_total_steps, starting_time)
     # Print accuracy in console
