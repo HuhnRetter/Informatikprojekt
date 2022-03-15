@@ -1,5 +1,4 @@
 import math
-
 import matplotlib.pyplot as plt
 import torch
 import torchvision.transforms as transforms
@@ -20,7 +19,7 @@ all_classes = ["dog", "flower", "other"]
 batch_size = 9
 
 
-def setupDatasetLoader():
+def setupDatasetLoader(TESTFOLDER_param, batch_size_param):
     """transforms the test images
 
     :return: returns the data_loader for the test images
@@ -31,29 +30,29 @@ def setupDatasetLoader():
         transforms.ToTensor(),
         transforms.Normalize(0.5, 0.5, 0.5),
     ])
-    test_dataset = ImageFolder(root=TESTFOLDER, transform=multitransform)
-    test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=True)
+    test_dataset = ImageFolder(root=TESTFOLDER_param, transform=multitransform)
+    test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size_param, shuffle=True)
 
     return test_loader
 
 
-def setupModel():
+def setupModel(all_classes_count_param, FILENEURALNET_param):
     """loads the model from the given path
 
     :return: returns the loaded model
     """
-    model = ImageTransferLearning.neuralNetSetup()
-    model.load_state_dict(torch.load(FILENEURALNET))
+    model = ImageTransferLearning.neuralNetSetup(all_classes_count_param)
+    model.load_state_dict(torch.load(FILENEURALNET_param))
     model.eval()
     return model
 
 
-def setup():
+def setup(batch_size_param):
     """setups the output format of the test images
 
     :return: returns ax for adding images into the plot and fig for defining the layout
     """
-    batch_size_sqrt = int(math.sqrt(batch_size))
+    batch_size_sqrt = int(math.sqrt(batch_size_param))
     fig, ax = plt.subplots(batch_size_sqrt, batch_size_sqrt)
     ax = ax.ravel()
     return ax, fig
@@ -87,7 +86,7 @@ def useImageRecognition(test_loader, model, ax, fig):
 
 
 if __name__ == "__main__":
-    test_loader = setupDatasetLoader()
-    model = setupModel()
-    ax, fig = setup()
+    test_loader = setupDatasetLoader(TESTFOLDER, batch_size)
+    model = setupModel(len(all_classes), FILENEURALNET)
+    ax, fig = setup(batch_size)
     useImageRecognition(test_loader, model, ax, fig)

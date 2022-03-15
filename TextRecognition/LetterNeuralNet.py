@@ -26,6 +26,8 @@ MODELFOLDER = './Models/'
 num_epochs = 10
 batch_size = 26
 learning_rate = 0.001
+num_workers = 2
+pin_memory = True
 
 # 1 == True ; 0 == False
 load_model_from_file = 1
@@ -39,7 +41,6 @@ FILE = f"{MODELFOLDER}LetterNeuralNet{MiddleFilename}{EndFilename}"
 
 # Manuel Filename for loading
 FILEPATH = "LetterNeuralNetNE10BS26LR0001.pth"
-
 FILE = f"{MODELFOLDER}{FILEPATH}"
 # Writer for Tensorboard
 writer = SummaryWriter(f'Tensorboard/runs/{MiddleFilename}')
@@ -66,7 +67,7 @@ class ConvNet(nn.Module):
         return x
 
 
-def dataloaderSetup():
+def dataloaderSetup(num_workers_param, pin_memory_param):
     """setups both dataloader for the EMNIST datasets
 
     :return: train_loader and test_loader of the EMNIST dataset
@@ -77,15 +78,15 @@ def dataloaderSetup():
     test_dataset = torchvision.datasets.EMNIST(root=DATASETPATH, split='letters', transform=transforms.ToTensor(),
                                                train=False)
     # Data loader
-    train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
+    train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers_param, pin_memory=pin_memory_param)
+    test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers_param, pin_memory=pin_memory_param)
 
     return train_loader, test_loader
 
 
 def main():
     model = ConvNet().to(device)
-    train_loader, test_loader = dataloaderSetup()
+    train_loader, test_loader = dataloaderSetup(num_workers, pin_memory)
     if load_model_from_file == 1:
         model = load_model(model, FILE)
     else:
@@ -95,7 +96,7 @@ def main():
         model = trainingPhase(model, criterion, optimizer, train_loader, num_epochs, 0.1, save_trained_model, device,
                               confusionmatrixdevice, writer, FILE, all_classes, 1)
 
-    testingPhase(model, test_loader, writer, FILE, all_classes, 1, confusionmatrixdevice)
+    testingPhase(model, test_loader, writer, FILE, all_classes, 1, confusionmatrixdevice, 0)
 
 
 if __name__ == "__main__":

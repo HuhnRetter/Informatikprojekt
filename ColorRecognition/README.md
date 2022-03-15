@@ -1,6 +1,6 @@
 # Color Recognition
 
-The color recognition is based on a simple neural network with one hidden layer. The model is trained with the HSL-Values of a color instead of the BGR-Values to have a better comparison between manual (predetermined by human) and automatic (weights learned by neural net) color detection. For the color detection only the H and L Values from HSL are being used because they are sufficient for simple color recognition. The trained colors consists of white, red, green and other. The following code snippet shows an example of the predetermined weights for the color red and white.
+The color recognition is based on a simple neural network with one hidden layer. The model is trained with the HSL-Values of a color instead of the BGR-Values to have a better comparison between manual (predetermined by human) and automatic (weights learned by neural network) color detection. For the color detection only the H and L Values from HSL are being used, because they are sufficient for simple color recognition. The trained colors consists of white, red, green and "other". The following code snippet shows an example of the predetermined weights for the color red and white.
 
 ```python
 if light_value > 229:
@@ -11,7 +11,9 @@ elif hue_value < 5:
 
 ## Dataset
 
-The dataset was created by randomly generating a color with BGR-Values and manually determining which color class they belong to. After that each BGR-Value was transformed into a HSL-Value. The training dataset consists of **1600** color samples with **400** colors per class. The testing dataset consists of **400** color samples with **100** colors per class. Here are examples for each color from the TrainingDatasetHLS.
+The dataset was created by randomly generating a color with BGR-Values and manually determining which color class they belong to. After that each BGR-Value was transformed into a HSL-Value. The training dataset consists of **1600** color samples with **400** colors per class. The testing dataset consists of **400** color samples with **100** colors per class. 
+
+Here are examples for each color from the TrainingDatasetHLS:
 
 | class_id | H-Value             | L-Value             |
 | -------- | ------------------- | ------------------- |
@@ -44,7 +46,7 @@ batch_size = 4
 learning_rate = 0.001
 ```
 
-I tested the model with different parameters and in conclusion I choose the parameters for the following reason. The `hidden_size = 25` is the lowest possible value, which results in the highest possible accuracy from the given dataset. From multiple tests with different `batch_size` values, and I concluded that the value of `batch_size` needs to be equal or smaller than the classes to minimize overfitting. 
+I tested the model with different parameters and in conclusion I choose the parameters for the following reason. The `hidden_size = 25` is the lowest possible value, which results in the highest possible accuracy from the given dataset. The result of multiple tests with different `batch_size` values resulted in the following conclusion, that the value of `batch_size` needs to be equal or smaller than the classes to minimize overfitting. 
 
 ### Training results
 
@@ -52,7 +54,7 @@ The following confusion matrix shows the accuracy for each color:
 
 ![ConfusionmatrixTrain](https://github.com/HuhnRetter/Informatikprojekt/blob/main/ColorRecognition/Images/ConfusionmatrixTrain.png)
 
-The average color recognition accuracy is 94,25%. The trained model shows difficulties in predicting the color class "other". There are multiple possible reasons for this low value in comparison to the other color classes. One of them is that the dataset is too small or there is variety of "other" colors is too low. Another reason could be that not using the S-Value of HSL results in a lower accuracy.
+The average color recognition accuracy is 94,25%. The trained model shows difficulties in predicting the color class "other". There are multiple possible reasons for this low value in comparison to the other color classes. One of them is that the dataset is too small or the variety of "other" colors is too low. Another reason could be that not using the S-Value of HSL results in a lower accuracy.
 
 ### Testing results
 
@@ -60,7 +62,7 @@ The following confusion matrix shows the accuracy for each color:
 
 ![ConfusionmatrixTest](https://github.com/HuhnRetter/Informatikprojekt/blob/main/ColorRecognition/Images/ConfusionmatrixTest.png)
 
-The average color recognition accuracy is 87,75%. The trained model shows a good generalization for the color recognition of red, green and "other". The color recognition of the white color seems to have a rather bad generalization in comparison to the other colors. There are multiple possible reasons for this problem. One of them could be that the balancing of the white colors for the training dataset is bad. This could mean that the dataset does not cover all possible shades of white, which results in a worse accuracy of white with the testing dataset. Another reason could be that because I manually selected each color, that there is a some noise in the testing or training dataset. Both reasons would support why the white colors are in 20% of the cases guessed as "other". 
+The average color recognition accuracy is 87,75%. The trained model shows a good generalization for the color recognition of red, green and "other". The color recognition of the white color seems to have a rather bad generalization in comparison to the other colors. There are multiple possible reasons for this problem. One of them could be that the balancing of the white colors for the training dataset is bad. This could mean that the dataset does not cover all possible shades of white, which results in a worse accuracy of white with the testing dataset. Another reason could be that because I manually selected each color, there is a some noise in the testing or training dataset. Both possible reasons would support why the white colors are in 20% of the cases guessed as "other". 
 
 ## Color Recognition
 

@@ -12,7 +12,7 @@ Here are some examples for each class:
 
 ## Convolutional Neural Network
 
-I choose a pretrained model, because I have already created a  convolutional neural network for the text recognition. Another reason is that I would need to create over 50 different convolutional layers to achieve a good feature extraction. So I choose to use the pretrained **resnet18** model and keeping the weights for feature extraction to minimize the training session. 
+I choose a pretrained model, because I have already created a convolutional neural network for the text recognition. Another reason is that I would need to create over 50 different convolutional layers to achieve a good feature extraction. So I choose to use the pretrained **resnet18** model and keeping the weights for feature extraction to minimize the training session. 
 
 I used to the following code snippet to keep the weights from the pretrained model and add a linear layer for the classification:
 

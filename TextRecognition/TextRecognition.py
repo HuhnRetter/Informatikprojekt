@@ -1,5 +1,4 @@
 import sys
-
 import cv2
 import numpy as np
 import skimage.color
@@ -11,7 +10,6 @@ from skimage import io
 from skimage import measure
 from skimage.transform import resize
 from dataclasses import dataclass
-
 import operator
 import LetterNeuralNet
 
@@ -32,7 +30,6 @@ FILENEURALNET = f"{MODELFOLDER}{MODELPATH}"
 padding = 0.3  # percentage from given image
 word_min_accuracy = 0.5
 line_diff = 0.1
-word_distance_from_prev_letter = 1  # the higher the gaps between each letter -> the higher the word_distance_from_prev_letter
 word_distance = 10  # gap between each letter as pixels
 
 
@@ -271,7 +268,7 @@ def differenceForBoundingbox(prev, current, axis, diff_param):
 
     """
     if axis == "y":
-        return abs(prev.ymax - current.y) > word_distance  # (prev.getYsize() * diff_param)
+        return abs(prev.ymax - current.y) > diff_param
     else:
         return abs(prev.xmax - current.xmax) > (prev.getXsize() * diff_param)
 
@@ -314,7 +311,7 @@ def splitList(all_boundingboxes):
     counter = 0
     list_of_lists.append([])
     for boundingbox in all_boundingboxes:
-        if (boundingbox.letter == ","):
+        if boundingbox.letter == ",":
             counter += 1
             list_of_lists.append([])
         else:
@@ -364,12 +361,12 @@ def guessWord(word: str):
     for i, w in enumerate(all_possible_words):
         accuracy_to_words.append(0)
         # not same length = cant be the word
-        if (len(word) != len(w)):
+        if len(word) != len(w):
             continue
 
         same_letter_counter = 0
         for letterindex, notUsed in enumerate(word):
-            if (word[letterindex] == w[letterindex].upper()):
+            if word[letterindex] == w[letterindex].upper():
                 same_letter_counter += 1
         accuracy_to_words[i] = same_letter_counter / len(word)
 
@@ -405,7 +402,7 @@ def getWords(all_boundingboxes):
     counter = 0
     for word in splittedList:
         returnwordlist = (
-            sortListOfBoundingboxBy(word_distance_from_prev_letter, operator.attrgetter('ymax'), word, "y"))
+            sortListOfBoundingboxBy(word_distance, operator.attrgetter('ymax'), word, "y"))
 
         splittedReturnwordlist = splitList(returnwordlist)
         # to remove list stacking

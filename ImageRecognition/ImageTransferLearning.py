@@ -6,7 +6,6 @@ from torch.utils.data import Dataset
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import models
 from torchvision.datasets import ImageFolder
-
 # tensorboard --logdir=runs
 ###################################################
 from HelperFunctions.HelperPhases import *
@@ -15,7 +14,6 @@ device = torch.device('dml')
 confusionmatrixdevice = torch.device('dml')
 
 all_classes = ["dog", "flower", "other"]
-
 # Paths
 DATASETPATH = 'C:/Users/matri/Desktop/Informatikprojekt/Backups/BackupNew/ImageRecognition/datasets'
 MODELFOLDER = './Models/'
@@ -43,7 +41,7 @@ FILE = f"{MODELFOLDER}ImageTransferLearning{MiddleFilename}{EndFilename}"
 writer = SummaryWriter(f'Tensorboard/runs/{MiddleFilename}')
 
 
-def neuralNetSetup():
+def neuralNetSetup(num_classes_param):
     """gets the pretrained model resnet18
 
     and adds a new Linear layer to it
@@ -56,11 +54,11 @@ def neuralNetSetup():
         param.requires_grad = False
 
     num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(num_ftrs, num_classes)
+    model.fc = nn.Linear(num_ftrs, num_classes_param)
     return model
 
 
-def dataloaderSetup(num_workers=0, pin_memory=False):
+def dataloaderSetup(num_workers_param=0, pin_memory_param=False):
     """setups train and test dataloader from the given path
 
     :return: returns train and test loader
@@ -87,13 +85,14 @@ def dataloaderSetup(num_workers=0, pin_memory=False):
     test_dataset = ImageFolder(root=f'{DATASETPATH}/test', transform=data_transforms['test'])
     # Data loader
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True,
-                                               num_workers=num_workers, pin_memory=pin_memory)
-    test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=pin_memory)
+                                               num_workers=num_workers_param, pin_memory=pin_memory_param)
+    test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False,
+                                              num_workers=num_workers_param, pin_memory=pin_memory_param)
     return train_loader, test_loader
 
 
 def main():
-    model = neuralNetSetup().to(device)
+    model = neuralNetSetup(num_classes).to(device)
     train_loader, test_loader = dataloaderSetup(num_workers, pin_memory)
     if load_model_from_file == 1:
         model = load_model(model, FILE)
@@ -104,7 +103,7 @@ def main():
         model = trainingPhase(model, criterion, optimizer, train_loader, num_epochs, 0.1, save_trained_model, device,
                               confusionmatrixdevice, writer, FILE, all_classes, 0)
 
-    testingPhase(model, test_loader, writer, FILE, all_classes, 0, confusionmatrixdevice)
+    testingPhase(model, test_loader, writer, FILE, all_classes, 0, confusionmatrixdevice, 0)
 
 
 if __name__ == "__main__":

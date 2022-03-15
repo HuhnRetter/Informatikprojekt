@@ -40,23 +40,15 @@ x = self.fc3(x)  # -> n, 26
 
 ### 																							Formula for determining the size of each convolutional layer
 
-$$
-(W-F + 2P)/S+1 = Convolutional Layer Size
-$$
+<img src="https://render.githubusercontent.com/render/math?math=(W-F + 2P)/S+1 = Convolutional Layer Size">
 
-$$
-W = input size; F = filter size; P = padding size; S = stride size
-$$
+<img src="https://render.githubusercontent.com/render/math?math=W = input size, F = filter size, P = padding size, S = stride size">
 
 ### 																																		example: 
 
-$$
-input image-> convolutionallayer -----------> relu function -> pooling layer
-$$
+<img src="https://render.githubusercontent.com/render/math?math=input image-> convolutionallayer -----------> relu function -> pooling layer">
 
-$$
--> 1, 28, 28 ->outputchannelsize, (28-5)/1 + 1 = 24, 24 -> 6, 24, 24 -> 6, 24/2 =         6,12, 12
-$$
+<img src="https://render.githubusercontent.com/render/math?math=-> 1, 28, 28 ->outputchannelsize, (28-5)/1 + 1 = 24, 24 -> 6, 24, 24 -> 6, 24/2 =         6,12, 12">
 
 ### Parameters
 
