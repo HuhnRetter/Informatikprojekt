@@ -26,12 +26,12 @@ MODELFOLDER = './Models/'
 num_epochs = 10
 batch_size = 26
 learning_rate = 0.001
-num_workers = 2
-pin_memory = True
+num_workers = 0
+pin_memory = False
 
 # 1 == True ; 0 == False
-load_model_from_file = 1
-save_trained_model = 1
+load_model_from_file = 0
+save_trained_model = 0
 
 # Automatic Filename for loading and saving
 learning_rate_string = str(learning_rate).replace('.', '')
@@ -78,8 +78,8 @@ def dataloaderSetup(num_workers_param, pin_memory_param):
     test_dataset = torchvision.datasets.EMNIST(root=DATASETPATH, split='letters', transform=transforms.ToTensor(),
                                                train=False)
     # Data loader
-    train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers_param, pin_memory=pin_memory_param)
-    test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers_param, pin_memory=pin_memory_param)
+    train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)#, num_workers=num_workers_param, pin_memory=pin_memory_param)
+    test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)#, num_workers=num_workers_param, pin_memory=pin_memory_param)
 
     return train_loader, test_loader
 

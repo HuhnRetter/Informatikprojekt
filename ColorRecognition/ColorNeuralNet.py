@@ -21,7 +21,7 @@ MODELFOLDER = './Models/'
 input_size = 2
 hidden_size = 25
 num_classes = len(all_classes)
-num_epochs = 150
+num_epochs = 10
 batch_size = 4
 learning_rate = 0.001
 

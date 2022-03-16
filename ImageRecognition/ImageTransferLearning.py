@@ -1,13 +1,16 @@
+import os
+import pathlib
 import torch.nn as nn
 import torchvision.transforms as transforms
-from PIL import ImageFile
+from PIL import Image
 from torch.utils.data import Dataset
 ############## TENSORBOARD ########################
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import models
-from torchvision.datasets import ImageFolder
 # tensorboard --logdir=runs
 ###################################################
+from torchvision.datasets import ImageFolder
+
 from HelperFunctions.HelperPhases import *
 
 device = torch.device('dml')
@@ -40,6 +43,32 @@ FILE = f"{MODELFOLDER}ImageTransferLearning{MiddleFilename}{EndFilename}"
 # Writer for Tensorboard
 writer = SummaryWriter(f'Tensorboard/runs/{MiddleFilename}')
 
+class ImageDataset(torch.utils.data.Dataset):
+    def __init__(self, root: str, folder: str, klass: int, extension: str = "jpg", transform=None):
+        self._data = pathlib.Path(root) / folder
+        self.klass = klass
+        self.extension = extension
+        self.transform = transform
+        # Only calculate once how many files are in this folder
+        # Could be passed as argument if you precalculate it somehow
+        # e.g. ls | wc -l on Linux
+        self._length = sum(1 for entry in os.listdir(self._data))
+
+    def __len__(self):
+        # No need to recalculate this value every time
+        return self._length
+
+    def __getitem__(self, index):
+        # images always follow [0, n-1], so you access them directly
+        image = Image.open(self._data / "{}.{}".format(str(index), self.extension)).convert('RGB')
+        #image = io.imread(FILETEXTTEST)
+        #ndarray_image = np.array(image)
+        if self.transform:
+            image = self.transform(image)
+
+        sample = image, torch.tensor(self.klass)
+        return sample
+
 
 def neuralNetSetup(num_classes_param):
     """gets the pretrained model resnet18
@@ -63,7 +92,7 @@ def dataloaderSetup(num_workers_param=0, pin_memory_param=False):
 
     :return: returns train and test loader
     """
-    ImageFile.LOAD_TRUNCATED_IMAGES = True
+    Image.LOAD_TRUNCATED_IMAGES = True
 
     data_transforms = {
         'train': transforms.Compose([
@@ -81,13 +110,29 @@ def dataloaderSetup(num_workers_param=0, pin_memory_param=False):
         ]),
     }
     # Image dataset
-    train_dataset = ImageFolder(root=f'{DATASETPATH}/train', transform=data_transforms['train'])
-    test_dataset = ImageFolder(root=f'{DATASETPATH}/test', transform=data_transforms['test'])
+    #train_dataset = ImageFolder(root=f'{DATASETPATH}/train', transform=data_transforms['train'])
+    #test_dataset = ImageFolder(root=f'{DATASETPATH}/test', transform=data_transforms['test'])
+    # Image dataset
+    train_dataset = (
+        ImageDataset(f'{DATASETPATH}/train', "Dog", 0, transform=data_transforms['train'])
+        + ImageDataset(f'{DATASETPATH}/train', "Flower", 1, transform=data_transforms['train'])
+        + ImageDataset(f'{DATASETPATH}/train', "Other", 2, transform=data_transforms['train'])
+    )
+    test_dataset = (
+            ImageDataset(f'{DATASETPATH}/test', "Dog", 0, transform=data_transforms['test'])
+            + ImageDataset(f'{DATASETPATH}/test', "Flower", 1, transform=data_transforms['test'])
+            + ImageDataset(f'{DATASETPATH}/test', "Other", 2, transform=data_transforms['test'])
+    )
     # Data loader
+    persistent_worker_param = True
+    if(num_workers_param == 0):
+        persistent_worker_param = False
+
+
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True,
-                                               num_workers=num_workers_param, pin_memory=pin_memory_param)
+                                               num_workers=num_workers_param, pin_memory=pin_memory_param, persistent_workers=persistent_worker_param)
     test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False,
-                                              num_workers=num_workers_param, pin_memory=pin_memory_param)
+                                              num_workers=num_workers_param, pin_memory=pin_memory_param, persistent_workers=persistent_worker_param)
     return train_loader, test_loader
 
 
