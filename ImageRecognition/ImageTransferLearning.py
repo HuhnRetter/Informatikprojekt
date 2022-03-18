@@ -61,8 +61,6 @@ class ImageDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         # images always follow [0, n-1], so you access them directly
         image = Image.open(self._data / "{}.{}".format(str(index), self.extension)).convert('RGB')
-        #image = io.imread(FILETEXTTEST)
-        #ndarray_image = np.array(image)
         if self.transform:
             image = self.transform(image)
 
@@ -109,7 +107,7 @@ def dataloaderSetup(num_workers_param=0, pin_memory_param=False):
             transforms.Normalize(0.5, 0.5, 0.5),
         ]),
     }
-    # Image dataset
+    # Image dataset with ImageFolder
     #train_dataset = ImageFolder(root=f'{DATASETPATH}/train', transform=data_transforms['train'])
     #test_dataset = ImageFolder(root=f'{DATASETPATH}/test', transform=data_transforms['test'])
     # Image dataset
